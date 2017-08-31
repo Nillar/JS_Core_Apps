@@ -12,21 +12,25 @@
     <link rel="stylesheet" href="style/comments.css">
     <script src="../../jquery-3.2.1.min.js"></script>
     <script src="scripts/seenIt.js"></script>
+    <script src="scripts/models/auth.js"></script>
+    <script src="scripts/models/requester.js"></script>
+    <script src="scripts/models/commentsService.js"></script>
+    <script src="scripts/models/postService.js"></script>
 </head>
-<body onload="startApp()">
+<body>
 
 <div id="container">
     <header>
         <span class="logo">☃</span><span class="header">SeenIt</span>
-        <div id="profile"><span>pesho</span>|<a href="#/logout">logout</a></div>
+        <div id="profile"><span></span>|<a href="#/logout" id="logoutLink">logout</a></div>
     </header>
 
     <div class="content">
         <div id="menu">
             <div class="title">Navigation</div>
-            <a class="nav" href="#">Catalog</a>
-            <a class="nav" href="#">Submit Link</a>
-            <a class="nav" href="#">My Posts</a>
+            <a class="nav" href="#" id="catalog">Catalog</a>
+            <a class="nav" href="#" id="submitLink">Submit Link</a>
+            <a class="nav" href="#" id="myPosts">My Posts</a>
         </div>
 
         <section id="viewWelcome">
@@ -64,98 +68,98 @@
 
         <section id="viewCatalog">
             <div class="posts">
-                <article class="post">
-                    <div class="col rank">
-                        <span>1</span>
-                    </div>
-                    <div class="col thumbnail">
-                        <a href="https://softuni.bg/">
-                            <img src="https://media.licdn.com/mpr/mpr/shrink_200_200/AAEAAQAAAAAAAAMDAAAAJGY2Mjg3Y2I4LWU1ZTktNDJlNC1iM2M4LTc2MDlhNmVhNThhNQ.png">
-                        </a>
-                    </div>
-                    <div class="post-content">
-                        <div class="title">
-                            <a href="https://softuni.bg/">
-                                SoftUni
-                            </a>
-                        </div>
-                        <div class="details">
-                            <div class="info">
-                                submitted 1 day ago by Kiril
-                            </div>
-                            <div class="controls">
-                                <ul>
-                                    <li class="action"><a class="commentsLink" href="#">comments</a></li>
-                                    <li class="action"><a class="editLink" href="#">edit</a></li>
-                                    <li class="action"><a class="deleteLink" href="#">delete</a></li>
-                                </ul>
-                            </div>
+                <!--<article class="post">-->
+                    <!--<div class="col rank">-->
+                        <!--<span>1</span>-->
+                    <!--</div>-->
+                    <!--<div class="col thumbnail">-->
+                        <!--<a href="https://softuni.bg/">-->
+                            <!--<img src="https://media.licdn.com/mpr/mpr/shrink_200_200/AAEAAQAAAAAAAAMDAAAAJGY2Mjg3Y2I4LWU1ZTktNDJlNC1iM2M4LTc2MDlhNmVhNThhNQ.png">-->
+                        <!--</a>-->
+                    <!--</div>-->
+                    <!--<div class="post-content">-->
+                        <!--<div class="title">-->
+                            <!--<a href="https://softuni.bg/">-->
+                                <!--SoftUni-->
+                            <!--</a>-->
+                        <!--</div>-->
+                        <!--<div class="details">-->
+                            <!--<div class="info">-->
+                                <!--submitted 1 day ago by Kiril-->
+                            <!--</div>-->
+                            <!--<div class="controls">-->
+                                <!--<ul>-->
+                                    <!--<li class="action"><a class="commentsLink" href="#">comments</a></li>-->
+                                    <!--<li class="action"><a class="editLink" href="#">edit</a></li>-->
+                                    <!--<li class="action"><a class="deleteLink" href="#">delete</a></li>-->
+                                <!--</ul>-->
+                            <!--</div>-->
 
-                        </div>
-                    </div>
-                </article>
+                        <!--</div>-->
+                    <!--</div>-->
+                <!--</article>-->
 
-                <article class="post">
-                    <div class="col rank">
-                        <span>2</span>
-                    </div>
-                    <div class="col thumbnail">
-                        <a href="https://www.sli.do/">
-                            <img src="https://www.sli.do/assets/images/2-step.png">
-                        </a>
-                    </div>
-                    <div class="post-content">
-                        <div class="title">
-                            <a href="https://www.sli.do/">
-                                Sli.Do
-                            </a>
-                        </div>
-                        <div class="details">
-                            <div class="info">
-                                submitted 3 days ago by Viktor
-                            </div>
-                            <div class="controls">
-                                <ul>
-                                    <li class="action"><a class="commentsLink" href="#">comments</a></li>
-                                    <li class="action"><a class="editLink" href="#">edit</a></li>
-                                    <li class="action"><a class="deleteLink" href="#">delete</a></li>
-                                </ul>
-                            </div>
+                <!--<article class="post">-->
+                    <!--<div class="col rank">-->
+                        <!--<span>2</span>-->
+                    <!--</div>-->
+                    <!--<div class="col thumbnail">-->
+                        <!--<a href="https://www.sli.do/">-->
+                            <!--<img src="https://www.sli.do/assets/images/2-step.png">-->
+                        <!--</a>-->
+                    <!--</div>-->
+                    <!--<div class="post-content">-->
+                        <!--<div class="title">-->
+                            <!--<a href="https://www.sli.do/">-->
+                                <!--Sli.Do-->
+                            <!--</a>-->
+                        <!--</div>-->
+                        <!--<div class="details">-->
+                            <!--<div class="info">-->
+                                <!--submitted 3 days ago by Viktor-->
+                            <!--</div>-->
+                            <!--<div class="controls">-->
+                                <!--<ul>-->
+                                    <!--<li class="action"><a class="commentsLink" href="#">comments</a></li>-->
+                                    <!--<li class="action"><a class="editLink" href="#">edit</a></li>-->
+                                    <!--<li class="action"><a class="deleteLink" href="#">delete</a></li>-->
+                                <!--</ul>-->
+                            <!--</div>-->
 
-                        </div>
-                    </div>
-                </article>
+                        <!--</div>-->
+                    <!--</div>-->
+                <!--</article>-->
 
-                <article class="post">
-                    <div class="col rank">
-                        <span>3</span>
-                    </div>
-                    <div class="col thumbnail">
-                        <a href="https://www.cnbc.com/2017/06/28/progress-buys-mobile-backend-start-up-kinvey-for-49-million.html">
-                            <img src="https://pbs.twimg.com/profile_images/464099715865276417/nXvsGPVO.png">
-                        </a>
-                    </div>
-                    <div class="post-content">
-                        <div class="title">
-                            <a href="https://www.cnbc.com/2017/06/28/progress-buys-mobile-backend-start-up-kinvey-for-49-million.html">
-                                Progress Software buys Kinvey
-                            </a>
-                        </div>
-                        <div class="details">
-                            <div class="info">
-                                submitted 4 hours ago by Nakov
-                            </div>
-                            <div class="controls">
-                                <ul>
-                                    <li class="action"><a class="commentsLink" href="#">comments</a></li>
-                                    <li class="action"><a class="editLink" href="#">edit</a></li>
-                                    <li class="action"><a class="deleteLink" href="#">delete</a></li>
-                                </ul>
-                            </div>
+                <!--<article class="post">-->
+                    <!--<div class="col rank">-->
+                        <!--<span>3</span>-->
+                    <!--</div>-->
+                    <!--<div class="col thumbnail">-->
+                        <!--<a href="https://www.cnbc.com/2017/06/28/progress-buys-mobile-backend-start-up-kinvey-for-49-million.html">-->
+                            <!--<img src="https://pbs.twimg.com/profile_images/464099715865276417/nXvsGPVO.png">-->
+                        <!--</a>-->
+                    <!--</div>-->
+                    <!--<div class="post-content">-->
+                        <!--<div class="title">-->
+                            <!--<a href="https://www.cnbc.com/2017/06/28/progress-buys-mobile-backend-start-up-kinvey-for-49-million.html">-->
+                                <!--Progress Software buys Kinvey-->
+                            <!--</a>-->
+                        <!--</div>-->
+                        <!--<div class="details">-->
+                            <!--<div class="info">-->
+                                <!--submitted 4 hours ago by Nakov-->
+                            <!--</div>-->
+                            <!--<div class="controls">-->
+                                <!--<ul>-->
+                                    <!--<li class="action"><a class="commentsLink" href="#">comments</a></li>-->
+                                    <!--<li class="action"><a class="editLink" href="#">edit</a></li>-->
+                                    <!--<li class="action"><a class="deleteLink" href="#">delete</a></li>-->
+                                <!--</ul>-->
+                            <!--</div>-->
 
-                        </div>
-                    </div>
-                </article>
+                        <!--</div>-->
+                    <!--</div>-->
+                <!--</article>-->
                 <!-- TODO: more posts will come here -->
             </div>
         </section>
@@ -308,8 +312,8 @@
     <div id="infoBox" class="notification"><span>Info</span></div>
     <div id="errorBox" class="notification"><span>Error</span></div>
 </div>
-<!--<script>-->
-    <!--startApp();-->
-<!--</script>-->
+<script>
+    startApp();
+</script>
 </body>
 </html>

@@ -14,8 +14,7 @@ let auth = (() => {
     function register(username, password, name) {
         let userData = {
             username,
-            password,
-            name
+            password
         };
 
         return requester.post('user', '', 'basic', userData);

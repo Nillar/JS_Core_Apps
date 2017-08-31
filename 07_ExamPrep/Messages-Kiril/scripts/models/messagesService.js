@@ -1,5 +1,3 @@
-import * as requester from "jquery";
-
 let messagesService  = (() => {
         function loadMyMessages(username) {
             let endpoint = `messages?query={"recipient_username":"${username}"}`;
