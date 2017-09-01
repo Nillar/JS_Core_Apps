@@ -8,6 +8,27 @@ function startApp() {
     $('section').hide();
 
 
+    // HELPER FUNCTION CALCTIME
+    function calcTime(dateIsoFormat) {
+        let diff = new Date - (new Date(dateIsoFormat));
+        diff = Math.floor(diff / 60000);
+        if (diff < 1) return 'less than a minute';
+        if (diff < 60) return diff + ' minute' + pluralize(diff);
+        diff = Math.floor(diff / 60);
+        if (diff < 24) return diff + ' hour' + pluralize(diff);
+        diff = Math.floor(diff / 24);
+        if (diff < 30) return diff + ' day' + pluralize(diff);
+        diff = Math.floor(diff / 30);
+        if (diff < 12) return diff + ' month' + pluralize(diff);
+        diff = Math.floor(diff / 12);
+        return diff + ' year' + pluralize(diff);
+
+        function pluralize(value) {
+            if (value !== 1) return 's';
+            else return '';
+        }
+    }
+
     // REQUESTER
     let requester = (() => {
 
@@ -58,7 +79,7 @@ function startApp() {
         }
     })();
 
-    function showView(view) {
+    function showView(view, id) {
         $('section').hide();
         switch (view) {
             case 'catalog':
@@ -67,6 +88,16 @@ function startApp() {
                 break;
             case 'createPost':
                 $('#viewSubmit').show();
+                break;
+            case 'details':
+                $('#viewComments').show();
+                break;
+            case 'myPosts':
+                $('#viewMyPosts').show();
+                listMyPosts();
+                break;
+            case 'comment':
+                detailPost(id);
                 break;
         }
     }
@@ -96,7 +127,7 @@ function startApp() {
     $('#btnRegister').click(registerUser);
     $('#btnLogin').click(loginUser);
     $('#submitLink').click(() => (showView('createPost')));
-    $('#myPosts').click(showView('myPosts'));
+    $('#myPosts').click(() => (showView('myPosts')));
     $('#catalog').click(() => (showView('catalog')));
 
     $('#btnSubmitPost').click(createPost);
@@ -229,7 +260,7 @@ function startApp() {
         }
 
         for (let i = 0; i < data.length; i++) {
-            console.log('posts');
+            // console.log('posts');
             let article = $('<article class="post">');
             let colRank = $('<div class="col rank">');
             let colThumbnail = $('<div class="col thumbnail">');
@@ -264,33 +295,59 @@ function startApp() {
         }
 
 
-        function calcTime(dateIsoFormat) {
-            let diff = new Date - (new Date(dateIsoFormat));
-            diff = Math.floor(diff / 60000);
-            if (diff < 1) return 'less than a minute';
-            if (diff < 60) return diff + ' minute' + pluralize(diff);
-            diff = Math.floor(diff / 60);
-            if (diff < 24) return diff + ' hour' + pluralize(diff);
-            diff = Math.floor(diff / 24);
-            if (diff < 30) return diff + ' day' + pluralize(diff);
-            diff = Math.floor(diff / 30);
-            if (diff < 12) return diff + ' month' + pluralize(diff);
-            diff = Math.floor(diff / 12);
-            return diff + ' year' + pluralize(diff);
-
-            function pluralize(value) {
-                if (value !== 1) return 's';
-                else return '';
-            }
-        }
-
     }
 
     //LISTING MY POSTS
     async function listMyPosts() {
         $('section').hide();
-        $('#viewCatalog').show();
-        // console.log('my posts');
+        $('#viewMyPosts').show();
+        $('#viewMyPosts div.posts').empty();
+        console.log('my posts');
+        let data = await requester.get('appdata', 'posts');
+
+        if (data.length === 0) {
+            return $('.posts').append('<p>No posts in database</p>');
+        }
+        let count = 1;
+
+        for (let post of data) {
+            if (post._acl.creator === sessionStorage.getItem('userId')) {
+
+                console.log('yes');
+                let article = $('<article class="post">');
+                let colRank = $('<div class="col rank">');
+                let colThumbnail = $('<div class="col thumbnail">');
+                let postContent = $('<div class="post-content">');
+
+                let comments = $(`<a class="commentsLink" href="#">comments</a>`).click(() => detailPost(post._id));
+                let edit = $(`<a class="editLink" href="#" data-target="Edit">edit</a>`).click(() => editPost(post._id));
+                let deleteP = $(`<a class="deleteLink" href="#">delete</a>`).click(() => deletePost(post._id));
+
+                let actionLi = $('<li class="action">');
+                colRank.append($(`<span>${count}</span>`));
+                article.append(colRank);
+                colThumbnail.append($(`<a href="${post.url}"><img src="${post.imageUrl}"></a>`));
+                article.append(colThumbnail);
+
+                postContent.append($(`<div class="title">`).append(`<a href="${post.url}">${post.title}</a>`));
+                postContent.append($(`<div class="details>">`)
+                    .append($(`<div class="info">submitted ${calcTime(post._kmd.ect)} ago by ${post.author}</div>`))
+                    .append($(`<div class="controls">`)
+                        .append($('<ul>')
+                            .append($(actionLi)
+                            ))));
+                actionLi.append(comments);
+                actionLi.append(edit);
+                actionLi.append(deleteP);
+
+                article.append(postContent);
+                $('.posts').append(article);
+
+                count++;
+            }
+        }
+
+        // https://baas.kinvey.com/appdata/app_id/posts?query={"author":"username"}&sort={"_kmd.ect": -1}
     }
 
     // CREATE POST
@@ -332,16 +389,116 @@ function startApp() {
 
     //EDITING POSTS
     function editPost() {
-
+        console.log('editPost');
     }
 
     //DELETING POSTS
     function deletePost() {
-
+        console.log('deletePost');
     }
 
-    function detailPost() {
-        console.log('viewDetails');
-    }
+    async function detailPost(id) {
+        $('#viewComments').empty();
+        showView('details');
+        let data = await requester.get('appdata', 'posts/' + id);
+        let html = $('#viewComments');
 
+        // THE POST ITSELF
+        let postClass = $(`<div class="post">`);
+        let colThumbnail = $('<div class="col thumbnail">');
+        let image = $(`<a href="${data.url}"><img src="${data.imageUrl}"></a>`);
+        let postContent = $('<div class="post-content">');
+        let title = $(`<div class="title"><a href="${data.url}">${data.title}</a></div>`);
+        if (data.description === undefined) {
+            data.description = "No description in it’s place";
+        }
+        let details = $(`<div class="details"><p>${data.description}</p><div class="info">submitted ${calcTime(data._kmd.ect)} ago by ${data.author}</div></div>`);
+        let controls = $('<div class="controls">');
+        let edit = $(`<a class="editLink" href="#" data-target="Edit">edit</a>`).click(() => editPost(data._id));
+        let remove = $(`<a class="deleteLink" href="#">delete</a>`).click(() => deletePost(data._id));
+
+        if (data.author === sessionStorage.getItem('username')) {
+            let ul = $('<ul>');
+            let li = $('<li class="action">');
+
+            li.append(edit);
+            li.append(remove);
+            ul.append(li);
+            controls.append(ul);
+        }
+
+        colThumbnail.append(image);
+        title.append(details);
+        details.append(controls);
+
+        postContent.append(title);
+        postContent.append(details);
+
+        postClass.append(colThumbnail);
+        postClass.append(postContent);
+        postClass.append($('<div class="clear"></div>'));
+
+        // THE COMMENT FORM
+        let commentFormDiv = $('<div class="post post-content">');
+        let form = $('<form id="commentForm"><label>Comment</label><textarea name="content" type="text"></textarea>');
+        let commentBtn = $('<input type="submit" value="Add Comment" id="btnPostComment">').click(() => createComment(data._id));
+
+        form.append(commentBtn);
+        commentFormDiv.append(form);
+
+        html.append(postClass);
+        html.append(commentFormDiv);
+
+        // COMMENTS
+        let comments = await requester.get('appdata', 'comments');
+        let count = 0;
+        let commentContainer = '';
+
+        for (let i = 0; i < comments.length; i++) {
+            if (data._id === comments[i].postId) {
+                count++;
+                commentContainer += `<article class="post post-content">`;
+                commentContainer += `<p>${comments[i].content}</p>`;
+                commentContainer += `<div class="info">submitted ${calcTime(comments[i]._kmd.ect)} ago by ${comments[i].author}`;
+                if (comments[i]._acl.creator === sessionStorage.getItem('username')) {
+                    commentContainer += remove;
+                }
+                commentContainer += `</div></article>`;
+            }
+            else {
+
+            }
+        }
+
+        if(count === 0){
+            commentContainer += `<article class="post post-content">`;
+            commentContainer += `<p>No comments yet.</p></article>`;
+            html.append(`${commentContainer}`);
+            return;
+        }
+
+        html.append(`${commentContainer}`);
+
+    }
+    async function createComment(id, ev) {
+        // ev.preventDefault();
+        let form = $('#commentForm');
+        let content = form.find('textarea[name="content"]').val();
+        let postId = id;
+        // let time = calcTime(Date.now());
+        let author = sessionStorage.getItem('username');
+
+        let comment = {
+            author, content, postId
+        };
+        try {
+            await requester.post('appdata', 'comments', comment);
+            showInfo('Comment created.');
+            showView('comment', id);
+            form.find('textarea[name="content"]').val('');
+
+        } catch (err) {
+            handleError(err);
+        }
+    }
 }
