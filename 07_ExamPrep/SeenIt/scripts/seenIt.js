@@ -57,7 +57,6 @@ function startApp() {
 
         function post(module, url, data, auth) {
             let req = makeRequest('POST', module, url, auth);
-            console.log(auth);
             req.data = JSON.stringify(data);
             req.headers['Content-Type'] = 'application/json';
             return $.ajax(req);
@@ -97,8 +96,11 @@ function startApp() {
                 listMyPosts();
                 break;
             case 'comment':
+                $('#viewComments').empty();
                 detailPost(id);
                 break;
+            case 'editPost':
+                $('#viewEdit').show();
         }
     }
 
@@ -130,7 +132,9 @@ function startApp() {
     $('#myPosts').click(() => (showView('myPosts')));
     $('#catalog').click(() => (showView('catalog')));
 
+
     $('#btnSubmitPost').click(createPost);
+
     // LOGGED IN OR LOGGED OUT CHECK
     if (sessionStorage.getItem('authtoken') === null) {
         userLoggedOut();
@@ -247,7 +251,6 @@ function startApp() {
         showError(reason.responseJSON.description);
     }
 
-
     // LISTING ALL POSTS
     async function listPosts() {
         $('section').hide();
@@ -302,7 +305,6 @@ function startApp() {
         $('section').hide();
         $('#viewMyPosts').show();
         $('#viewMyPosts div.posts').empty();
-        console.log('my posts');
         let data = await requester.get('appdata', 'posts');
 
         if (data.length === 0) {
@@ -312,8 +314,6 @@ function startApp() {
 
         for (let post of data) {
             if (post._acl.creator === sessionStorage.getItem('userId')) {
-
-                console.log('yes');
                 let article = $('<article class="post">');
                 let colRank = $('<div class="col rank">');
                 let colThumbnail = $('<div class="col thumbnail">');
@@ -388,18 +388,80 @@ function startApp() {
     }
 
     //EDITING POSTS
-    function editPost() {
-        console.log('editPost');
+    async function editPost(id) {
+        $('#viewComments div').empty();
+        $('#viewComments article').empty();
+        $('#viewComments').empty();
+        showView('editPost');
+        let data = await requester.get('appdata', 'posts/' + id);
+
+        let form = $('#editPostForm');
+        form.find('input[name="url"]').val(`${data.url}`);
+        form.find('input[name="title"]').val(`${data.title}`);
+        form.find('input[name="image"]').val(`${data.imageUrl}`);
+        form.find('textarea[name="description"]').val(`${data.description}`);
+
+        let clicks = 0;
+        // console.log(clicks);
+        $('#btnEditPost').click(() => edit(data._id));
+
+
+        async function edit(id) {
+            if(clicks === 0) {
+                let url = form.find('input[name="url"]').val();
+                let title = form.find('input[name="title"]').val();
+                let imageUrl = form.find('input[name="image"]').val();
+                let description = form.find('textarea[name="description"]').val();
+                let author = sessionStorage.getItem('username');
+
+                if (form.find('input[name="title"]').val().length === 0) {
+                    showError('Title cannot be empty');
+                    return;
+                }
+                if (url.slice(0, 4) !== 'http') {
+                    showError('Link is incorrect');
+                    return;
+                }
+
+                let editedPost = {
+                    url, title, imageUrl, description, author
+                };
+                clicks++;
+                console.log(clicks);
+                try {
+                    $('#viewComments').empty();
+                    await requester.update('appdata', 'posts/' + id, editedPost);
+                    showInfo('Post edited.');
+                    showView('comment', id);
+                    form.find('input[name="url"]').val('');
+                    form.find('input[name="title"]').val('');
+                    form.find('input[name="image"]').val('');
+                    form.find('textarea[name="description"]').val('');
+
+                } catch (err) {
+                    handleError(err);
+                }
+            }
+
+        }
     }
 
     //DELETING POSTS
-    function deletePost() {
-        console.log('deletePost');
+    async function deletePost(id) {
+        try {
+            await requester.remove('appdata', 'posts/' + id);
+            showInfo('Post deleted');
+            showView('catalog');
+        } catch (err) {
+            handleError(err);
+        }
     }
 
     async function detailPost(id) {
+
+
         $('#viewComments').empty();
-        showView('details');
+
         let data = await requester.get('appdata', 'posts/' + id);
         let html = $('#viewComments');
 
@@ -409,9 +471,11 @@ function startApp() {
         let image = $(`<a href="${data.url}"><img src="${data.imageUrl}"></a>`);
         let postContent = $('<div class="post-content">');
         let title = $(`<div class="title"><a href="${data.url}">${data.title}</a></div>`);
-        if (data.description === undefined) {
-            data.description = "No description in it’s place";
+
+        if (data.description === '') {
+            data.description = "No description.";
         }
+
         let details = $(`<div class="details"><p>${data.description}</p><div class="info">submitted ${calcTime(data._kmd.ect)} ago by ${data.author}</div></div>`);
         let controls = $('<div class="controls">');
         let edit = $(`<a class="editLink" href="#" data-target="Edit">edit</a>`).click(() => editPost(data._id));
@@ -440,8 +504,9 @@ function startApp() {
 
         // THE COMMENT FORM
         let commentFormDiv = $('<div class="post post-content">');
+
         let form = $('<form id="commentForm"><label>Comment</label><textarea name="content" type="text"></textarea>');
-        let commentBtn = $('<input type="submit" value="Add Comment" id="btnPostComment">').click(() => createComment(data._id));
+        let commentBtn = $('<input type="button" value="Add Comment" id="btnPostComment">').click(() => createComment(data._id));
 
         form.append(commentBtn);
         commentFormDiv.append(form);
@@ -454,34 +519,40 @@ function startApp() {
         let count = 0;
         let commentContainer = '';
 
+
         for (let i = 0; i < comments.length; i++) {
             if (data._id === comments[i].postId) {
+
                 count++;
+                commentContainer = '';
                 commentContainer += `<article class="post post-content">`;
                 commentContainer += `<p>${comments[i].content}</p>`;
                 commentContainer += `<div class="info">submitted ${calcTime(comments[i]._kmd.ect)} ago by ${comments[i].author}`;
-                if (comments[i]._acl.creator === sessionStorage.getItem('username')) {
-                    commentContainer += remove;
+
+                if (comments[i]._acl.creator === sessionStorage.getItem('userId')) {
+                    commentContainer += ` |<a class="deleteLink" id="btnDeleteComment" href="#">delete</a>`;
                 }
                 commentContainer += `</div></article>`;
-            }
-            else {
-
+                html.append(`${commentContainer}`);
+                $('a#btnDeleteComment.deleteLink').click(() => deleteComment(comments[i]._id, data._id));
             }
         }
 
-        if(count === 0){
+
+        if (count === 0) {
             commentContainer += `<article class="post post-content">`;
             commentContainer += `<p>No comments yet.</p></article>`;
             html.append(`${commentContainer}`);
-            return;
         }
 
-        html.append(`${commentContainer}`);
+
+        showView('details');
+        return;
 
     }
-    async function createComment(id, ev) {
-        // ev.preventDefault();
+
+    async function createComment(id) {
+
         let form = $('#commentForm');
         let content = form.find('textarea[name="content"]').val();
         let postId = id;
@@ -496,6 +567,19 @@ function startApp() {
             showInfo('Comment created.');
             showView('comment', id);
             form.find('textarea[name="content"]').val('');
+
+        } catch (err) {
+            handleError(err);
+        }
+    }
+
+    async function deleteComment(id, postId) {
+        // let data = await requester.get('appdata', 'posts/', postId);
+        try {
+            await requester.remove('appdata', 'comments/' + id);
+            showInfo('Comment deleted');
+
+            showView('comment', postId);
 
         } catch (err) {
             handleError(err);
