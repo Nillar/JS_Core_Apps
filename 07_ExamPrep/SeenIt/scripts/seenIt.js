@@ -4,9 +4,8 @@ function startApp() {
     const kinveyAppKey = "kid_rkHqs6zK-"; // APP KEY HERE
     const kinveyAppSecret = "0362fddf253c498f98f8aada81055d48"; // APP SECRET HERE
 
-    console.log('hi');
+    // console.log('hi');
     $('section').hide();
-
 
     // HELPER FUNCTION CALCTIME
     function calcTime(dateIsoFormat) {
@@ -78,6 +77,7 @@ function startApp() {
         }
     })();
 
+    // SHOW VIEW
     function showView(view, id) {
         $('section').hide();
         switch (view) {
@@ -104,7 +104,7 @@ function startApp() {
         }
     }
 
-    // Notifications
+    // NOTIFICATIONS
     $(document).on({
         ajaxStart: () => $('#loadingBox').show(),
         ajaxStop: () => $('#loadingBox').fadeOut()
@@ -457,11 +457,12 @@ function startApp() {
         }
     }
 
+    // DETAIL POST AND DELETE POST
     async function detailPost(id) {
 
 
         $('#viewComments').empty();
-
+        let clicks = 0;
         let data = await requester.get('appdata', 'posts/' + id);
         let html = $('#viewComments');
 
@@ -549,8 +550,25 @@ function startApp() {
         showView('details');
         return;
 
+        async function deleteComment(id, postId) {
+            // let data = await requester.get('appdata', 'posts/', postId);
+            if(clicks === 0) {
+                clicks++;
+                try {
+                    await requester.remove('appdata', 'comments/' + id);
+                    showInfo('Comment deleted');
+
+                    showView('comment', postId);
+
+                } catch (err) {
+                    handleError(err);
+                }
+            }
+        }
+
     }
 
+    // CREATE COMMENT
     async function createComment(id) {
 
         let form = $('#commentForm');
@@ -563,23 +581,14 @@ function startApp() {
             author, content, postId
         };
         try {
+            if(content === ''){
+                showError('Comments cannot be empty.');
+                return;
+            }
             await requester.post('appdata', 'comments', comment);
             showInfo('Comment created.');
             showView('comment', id);
             form.find('textarea[name="content"]').val('');
-
-        } catch (err) {
-            handleError(err);
-        }
-    }
-
-    async function deleteComment(id, postId) {
-        // let data = await requester.get('appdata', 'posts/', postId);
-        try {
-            await requester.remove('appdata', 'comments/' + id);
-            showInfo('Comment deleted');
-
-            showView('comment', postId);
 
         } catch (err) {
             handleError(err);
