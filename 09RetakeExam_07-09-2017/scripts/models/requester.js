@@ -1,7 +1,7 @@
 let requester = (() => {
     const kinveyBaseUrl = "https://baas.kinvey.com/";
-    const kinveyAppKey = "kid_B1admFBdZ"; // APP KEY HERE
-    const kinveyAppSecret = "21d4cc8f366d47c08291522699a3af0d"; // APP SECRET HERE
+    const kinveyAppKey = "kid_B1SW4wRYW"; // APP KEY HERE
+    const kinveyAppSecret = "74ffb522a5914087a1e6f4e6651c836d"; // APP SECRET HERE
 
     // Creates the authentication header
     function makeAuth(type) {
@@ -51,4 +51,4 @@ let requester = (() => {
         update,
         remove
     }
-})()
+})();

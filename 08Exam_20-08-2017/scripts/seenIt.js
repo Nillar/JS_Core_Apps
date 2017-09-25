@@ -57,7 +57,7 @@ function startApp() {
     $('#myPostsNav').click(() => showView('posts'));
     $('#catalogNav').click(() => showView('catalog'));
     $('#submitNav').click(() => showView('submit'));
-    $('#delPost').click(deletePost())
+    $('#delPost').click(deletePost());
 
 
 

@@ -11,11 +11,11 @@ let auth = (() => {
 
 
     // user/register
-    function register(username, password, name) {
+    function register(username, password, subscriptions) {
         let userData = {
             username,
             password,
-            name
+            subscriptions
         };
 
         return requester.post('user', '', 'basic', userData);

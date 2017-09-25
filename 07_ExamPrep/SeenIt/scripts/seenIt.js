@@ -306,7 +306,7 @@ function startApp() {
         $('#viewMyPosts').show();
         $('#viewMyPosts div.posts').empty();
         let data = await requester.get('appdata', 'posts');
-
+        let postCount = 0;
         if (data.length === 0) {
             return $('.posts').append('<p>No posts in database</p>');
         }
@@ -314,6 +314,7 @@ function startApp() {
 
         for (let post of data) {
             if (post._acl.creator === sessionStorage.getItem('userId')) {
+                postCount++;
                 let article = $('<article class="post">');
                 let colRank = $('<div class="col rank">');
                 let colThumbnail = $('<div class="col thumbnail">');
@@ -345,6 +346,10 @@ function startApp() {
 
                 count++;
             }
+
+        }
+        if(postCount === 0){
+            return $('.posts').append('<article class="post"><p>No posts in database</p></article>');
         }
 
         // https://baas.kinvey.com/appdata/app_id/posts?query={"author":"username"}&sort={"_kmd.ect": -1}
@@ -427,7 +432,7 @@ function startApp() {
                     url, title, imageUrl, description, author
                 };
                 clicks++;
-                console.log(clicks);
+
                 try {
                     $('#viewComments').empty();
                     await requester.update('appdata', 'posts/' + id, editedPost);
@@ -442,7 +447,6 @@ function startApp() {
                     handleError(err);
                 }
             }
-
         }
     }
 
